@@ -14,6 +14,7 @@ if your environment is such as below. ::
   SQLAlchemy==0.9.7
 
 ``ppic`` command can collect information that need available updates are existed or not. ::
+
   $ ppic sqlalchemy ansible
   collection information .. takes at least 0.05 sec
   { 'packages': [ { 'name': 'SQLAlchemy',
