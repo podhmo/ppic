@@ -7,7 +7,10 @@ import argparse
 import json
 import sys
 from collections import OrderedDict, namedtuple
-from pip.util import get_installed_distributions
+try:
+    from pip.utils import get_installed_distributions
+except ImportError:
+    from pip.util import get_installed_distributions
 import pkg_resources
 
 
