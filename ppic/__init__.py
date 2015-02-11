@@ -92,7 +92,7 @@ def parse(args):
     return parser.parse_args(args)
 
 
-def get_info_from_package_name(request):
+def get_info_from_request(request):
     url = "https://pypi.python.org/pypi/{name}/json".format(name=request.name)
     try:
         info = urlopen_json(url)
@@ -117,7 +117,7 @@ def main():
     r = OrderedDict(packages=[])
     sys.stderr.write("collection information .. takes at least {} sec \n".format(delay_time * (len(request_list) - 1)))
     for request in request_list:
-        r["packages"].append((get_info_from_package_name(request)).normalized_format())
+        r["packages"].append((get_info_from_request(request)).normalized_format())
         time.sleep(delay_time)  # delay for pypi server
 
     r["update_candidates"] = update_candidates = []
