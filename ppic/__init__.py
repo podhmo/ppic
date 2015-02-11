@@ -173,7 +173,7 @@ def main():
 
 
 def collect_info_list(request_list, delay_time=DELAY_TIME):
-    fmt = "collection information .. takes at least {} sec \n"
+    fmt = "collecting information .. takes at least {} sec \n"
     sys.stderr.write(fmt.format(delay_time * (len(request_list) - 1)))
     results = []
     for req in request_list:
