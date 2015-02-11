@@ -10,7 +10,8 @@ class Tests(unittest.TestCase):
         (["1.8a", "1.7"], "1.7"),
         (["1.8a1", "1.7"], "1.7"),
         (["1.8b1b", "1.7"], "1.7"),
-        (["1.8_alpha", "1.7"], "1.7")
+        (["1.8_alpha", "1.7"], "1.7"),
+        (["2.alpha", "1.7"], "1.7"),
     ])
     def _test_it(self, candidates, expected):
         target = self._makeOne()
