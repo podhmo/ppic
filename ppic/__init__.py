@@ -71,17 +71,34 @@ class RequestBuilder(object):
 class RequestRepository(object):
     def __init__(self, working_set=None):
         self.working_set = working_set or pkg_resources.working_set
+        self._by_project_name = None
         self.builder = RequestBuilder()
+
+    @property
+    def by_project_name(self):
+        if self._by_project_name is None:
+            self._by_project_name = {d.project_name: d for d in self.by_key.values()}
+        return self._by_project_name
+
+    @property
+    def by_key(self):
+        return self.working_set.by_key
 
     def collect_installed(self):
         return [self.builder.from_distribution(d) for d in get_installed_distributions()]
 
-    def find(self, name):
+    def _find_distribution(self, name):
         try:
-            return self.builder.from_distribution(self.working_set.by_key[name])
+            return self.by_key[name]
         except KeyError:
+            return self.by_project_name.get(name)
+
+    def find(self, name):
+        d = self._find_distribution(name)
+        if d is None:
             logger.info("distribution[name=%s] is not found", name)
             return self.builder.dummy(name)
+        return self.builder.from_distribution(d)
 
 
 def parse(args):
