@@ -23,23 +23,47 @@ class SuccessInfo(object):
         self.name = request.name
         self.info = info
 
-    def guess_last_modified(self, info, version):
+    @property
+    def version(self):
+        return self.info["info"]["version"]
+
+    @property
+    def previous_version(self):
+        return self.request.previous_version
+
+    def _guess_last_modified(self, info, version):
         try:
             return info["releases"][version][0]["upload_time"]
         except IndexError:
             logger.info("releases not found: name=%s, version=%s", self.name, version)
             return ""
 
+    def is_success(self):
+        return True
+
+    def is_new_install(self):
+        return self.previous_version is None
+
+    def has_update(self):
+        return (not self.is_new_install()
+                and self.previous_version != self.version)
+
+    @property
+    def project_name(self):
+        try:
+            return self.info["info"]["name"]  # project name
+        except KeyError:
+            return self.name
+
     def normalized_format(self):
         try:
             info = self.info
-            version = info["info"]["version"]
             r = OrderedDict()
             r["name"] = info["info"]["name"]
             if self.request.previous_version is not None:
                 r["_previous_version"] = self.request.previous_version
-            r["version"] = version
-            r["last_modified"] = self.guess_last_modified(info, version)
+            r["version"] = self.version
+            r["last_modified"] = self._guess_last_modified(info, self.version)
             return r
         except (IndexError, KeyError):
             print(info["info"]["name"])
@@ -57,6 +81,13 @@ class FailureInfo(object):
         r["name"] = self.name
         r["error"] = self.msg
         return r
+
+    def is_success(self):
+        return False
+
+    @property
+    def project_name(self):
+        return self.name
 
 
 class RequestBuilder(object):
@@ -131,21 +162,27 @@ def main():
 
     delay_time = parser.delay or DELAY_TIME
 
-    r = OrderedDict(packages=[])
+    output_dict = OrderedDict(packages=[])
     sys.stderr.write("collection information .. takes at least {} sec \n".format(delay_time * (len(request_list) - 1)))
-    for request in request_list:
-        r["packages"].append((get_info_from_request(request)).normalized_format())
+
+    results = []
+    for req in request_list:
+        results.append(get_info_from_request(req))
         time.sleep(delay_time)  # delay for pypi server
 
-    r["update_candidates"] = update_candidates = []
-    r["new_install_candidates"] = new_install_candidates = []
-    for p in (p for p in r["packages"] if "version" in p):
-        version = str(p["version"])
-        previous_version = p.get("_previous_version")
-        if previous_version is None:
-            new_install_candidates.append("{}: '' -> {!r}".format(p["name"], version))
+    output_dict["packages"] = [r.normalized_format() for r in results]
+
+    output_dict["update_candidates"] = update_candidates = []
+    output_dict["new_install_candidates"] = new_install_candidates = []
+
+    for r in results:
+        if not r.is_success():
             continue
-        if version == previous_version:
-            continue
-        update_candidates.append("{}: {!r} -> {!r}".format(p["name"], previous_version, version))
-    print(json.dumps(r, indent=2, ensure_ascii=False))
+
+        if r.is_new_install():
+            new_install_candidates.append("{}: '' -> {!r}".format(r.project_name, r.version))
+        elif r.has_update():
+            update_candidates.append("{}: {!r} -> {!r}".format(r.project_name, r.previous_version, r.version))
+    print(json.dumps(output_dict, indent=2, ensure_ascii=False))
+
+# TODO:test
