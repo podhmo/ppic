@@ -17,6 +17,7 @@ except IOError:
 
 install_requires = [
     'pip',
+    'distlib'
 ]
 
 
@@ -31,7 +32,7 @@ testing_extras = tests_require + [
 ]
 
 setup(name='ppic',
-      version='0.2.3',
+      version='0.2.4',
       description='ppic is python package information collector.',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[

@@ -3,7 +3,6 @@ import re
 import logging
 logger = logging.getLogger(__name__)
 import os.path
-import time
 import argparse
 import json
 import sys
@@ -14,6 +13,7 @@ except ImportError:
     from pip.util import get_installed_distributions
 import pkg_resources
 import tempfile
+from distlib.version import NormalizedVersion, UnsupportedVersionError
 from .resource import PYPIJSONResource, CachedResourceWrapper
 
 
@@ -42,8 +42,16 @@ class SuccessInfo(object):
 
         version = self.info["info"]["stable_version"]
         if version is None:
-            return self._guess_stable_version(sorted(self.info["releases"].keys(), reverse=True))
+            # todo:test
+            versions = sorted(self.info["releases"].keys(), reverse=True, key=self.maybe_version)
+            return self._guess_stable_version(versions)
         return version
+
+    def maybe_version(self, v):
+        try:
+            return NormalizedVersion(v)
+        except UnsupportedVersionError:
+            return NormalizedVersion("0")
 
     unstable_rx = re.compile("[\._][0-9]*([_\-a-zA-Z]+[0-9]*)+$")
 
