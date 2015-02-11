@@ -15,13 +15,19 @@ import pkg_resources
 
 
 Request = namedtuple("Request", "name previous_version")
+Options = namedtuple("Options", "is_collect_all is_stable_only delay_time")
+
+default_options = Options(is_collect_all=True,
+                          is_stable_only=False,
+                          delay_time=0.05)
 
 
 class SuccessInfo(object):
-    def __init__(self, request, info):
+    def __init__(self, request, info, options=default_options):
         self.request = request
         self.name = request.name
         self.info = info
+        self.options = options
 
     @property
     def version(self):
@@ -71,10 +77,11 @@ class SuccessInfo(object):
 
 
 class FailureInfo(object):
-    def __init__(self, request, msg):
+    def __init__(self, request, msg, options=default_options):
         self.request = request
         self.name = request.name
         self.msg = msg
+        self.options = options
 
     def normalized_format(self):
         r = OrderedDict()
@@ -135,50 +142,38 @@ class RequestRepository(object):
 def parse(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--all', action="store_true")
-    parser.add_argument("--delay", type=float)
+    parser.add_argument('--stable-only', action="store_false")
+    parser.add_argument("--delay", type=float, default=0.05)
     parser.add_argument('package', nargs="*")
     return parser.parse_args(args)
 
 
-def get_info_from_request(request):
+def get_info_from_request(request, options=default_options):
     url = "https://pypi.python.org/pypi/{name}/json".format(name=request.name)
     try:
         info = urlopen_json(url)
-        return SuccessInfo(request, info)
+        return SuccessInfo(request, info, options)
     except HTTPError as e:
-        return FailureInfo(request, str(e))
+        return FailureInfo(request, str(e), options)
 
 
-DELAY_TIME = 0.05
-
-
-def collect_request_list(package_names, is_collect_all=False):
+def collect_request_list(package_names, options):
     s = set()
     repository = RequestRepository()
-    if is_collect_all:
+    if options.is_collect_all:
         s.update(repository.collect_installed())
     for name in package_names:
         s.add(repository.find(name))
     return sorted(s, key=lambda r: r.name)
 
 
-def main():
-    parser = parse(sys.argv[1:])
-    request_list = collect_request_list(parser.package, parser.all)
-    delay_time = parser.delay or DELAY_TIME
-    results = collect_info_list(request_list, delay_time=delay_time)
-
-    output_dict = rendering_info_list(results)
-    print(json.dumps(output_dict, indent=2, ensure_ascii=False))
-
-
-def collect_info_list(request_list, delay_time=DELAY_TIME):
+def collect_info_list(request_list, options=default_options):
     fmt = "collecting information .. takes at least {} sec \n"
-    sys.stderr.write(fmt.format(delay_time * (len(request_list) - 1)))
+    sys.stderr.write(fmt.format(options.delay_time * (len(request_list) - 1)))
     results = []
     for req in request_list:
-        results.append(get_info_from_request(req))
-        time.sleep(delay_time)  # delay for pypi server
+        results.append(get_info_from_request(req, options))
+        time.sleep(options.delay_time)  # delay for pypi server
     return results
 
 
@@ -198,3 +193,18 @@ def rendering_info_list(results):
         elif r.has_update():
             update_candidates.append("{}: {!r} -> {!r}".format(r.project_name, r.previous_version, r.version))
     return output_dict
+
+
+def main():
+    parser = parse(sys.argv[1:])
+    options = Options(
+        is_collect_all=parser.all,
+        is_stable_only=parser.stable_only,
+        delay_time=parser.delay
+    )
+    request_list = collect_request_list(parser.package, options=options)
+    results = collect_info_list(request_list, options=options)
+
+    output_dict = rendering_info_list(results)
+    print(json.dumps(output_dict, indent=2, ensure_ascii=False))
+
