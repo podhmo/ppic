@@ -114,7 +114,7 @@ def main():
     delay_time = parser.delay or DELAY_TIME
 
     r = OrderedDict(packages=[])
-    sys.stderr.write("collection information .. takes at least {} sec \n".format(delay_time * len(request_list)))
+    sys.stderr.write("collection information .. takes at least {} sec \n".format(delay_time * (len(request_list) - 1)))
     for request in request_list:
         r["packages"].append((get_info_from_package_name(request)).normalized_format())
         time.sleep(delay_time)  # delay for pypi server
