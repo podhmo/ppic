@@ -16,7 +16,7 @@ except IOError:
 
 
 install_requires = [
-    'setuptools',
+    'pip',
 ]
 
 
@@ -52,5 +52,7 @@ setup(name='ppm',
       tests_require=tests_require,
       test_suite="ppm.tests",
       entry_points="""
+      [console_scripts]
+      ppm = ppm:main
 """)
 
