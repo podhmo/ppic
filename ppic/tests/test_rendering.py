@@ -12,7 +12,7 @@ test
 
 def _make_request(name, previous_version=None):
     from ppic import Request
-    return Request(name=name, previous_version=previous_version)
+    return Request(name=name, previous_version=previous_version, distribution=None)
 
 
 @test_function("ppic:rendering_info_list")

@@ -15,7 +15,7 @@ except ImportError:
 import pkg_resources
 
 
-Request = namedtuple("Request", "name previous_version")
+Request = namedtuple("Request", "name previous_version distribution")
 Options = namedtuple("Options", "is_collect_all is_stable_only delay_time see_dependencies")
 
 default_options = Options(is_collect_all=True,
@@ -119,10 +119,10 @@ class FailureInfo(object):
 class RequestBuilder(object):
     def from_distribution(self, dist):
         # dict_keys(['location', 'py_version', '_provider', '_version', '_key', 'project_name', 'precedence', 'platform'])
-        return Request(name=dist.project_name, previous_version=dist.version)
+        return Request(name=dist.project_name, previous_version=dist.version, distribution=dist)
 
     def dummy(self, name):
-        return Request(name=name, previous_version=None)
+        return Request(name=name, previous_version=None, distribution=None)
 
 
 class RequestRepository(object):
@@ -179,12 +179,23 @@ def get_info_from_request(request, options=default_options):
 
 
 def collect_request_list(package_names, options):
+    def recursive_collect(request):
+        if request.distribution:
+            for d in request.distribution.requires():
+                request = repository.find(d.project_name)
+                s.add(request)
+                recursive_collect(request)
+
     s = set()
     repository = RequestRepository()
     if options.is_collect_all:
         s.update(repository.collect_installed())
     for name in package_names:
-        s.add(repository.find(name))
+        request = repository.find(name)
+
+        s.add(request)
+        if options.see_dependencies:
+            recursive_collect(request)
     return sorted(s, key=lambda r: r.name)
 
 
@@ -229,4 +240,3 @@ def main():
 
     output_dict = rendering_info_list(results)
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))
-

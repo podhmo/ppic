@@ -6,7 +6,7 @@ from unittest import mock
 
 def _make_request(name):
     from ppic import Request
-    return Request(name=name, previous_version=None)
+    return Request(name=name, previous_version=None, distribution=None)
 
 
 @test_function("ppic:get_info_from_request")
