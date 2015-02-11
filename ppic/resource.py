@@ -36,9 +36,9 @@ class CachedResourceWrapper(object):
 
     @contextlib.contextmanager
     def using(self):
-        self.load(self.cachepath)
         yield self
-        self.save(self.cachepath)
+        if self._cache is not None:
+            self.save(self.cachepath)
 
     def load(self, cachepath):
         try:
@@ -57,6 +57,7 @@ class CachedResourceWrapper(object):
     def cache(self):
         if self._cache is not None:
             return self._cache
+        self.load(self.cachepath)
         return self._cache
 
     def access(self, request):
