@@ -161,15 +161,24 @@ def main():
         request_list = [repository.find(p) for p in parser.package]
 
     delay_time = parser.delay or DELAY_TIME
+    results = collect_results_from_request_list(request_list, delay_time=delay_time)
 
-    output_dict = OrderedDict(packages=[])
-    sys.stderr.write("collection information .. takes at least {} sec \n".format(delay_time * (len(request_list) - 1)))
+    output_dict = rendering_info_list(results)
+    print(json.dumps(output_dict, indent=2, ensure_ascii=False))
 
+
+def collect_results_from_request_list(request_list, delay_time=DELAY_TIME):
+    fmt = "collection information .. takes at least {} sec \n"
+    sys.stderr.write(fmt.format(delay_time * (len(request_list) - 1)))
     results = []
     for req in request_list:
         results.append(get_info_from_request(req))
         time.sleep(delay_time)  # delay for pypi server
+    return results
 
+
+def rendering_info_list(results):
+    output_dict = OrderedDict(packages=[])
     output_dict["packages"] = [r.normalized_format() for r in results]
 
     output_dict["update_candidates"] = update_candidates = []
@@ -183,6 +192,4 @@ def main():
             new_install_candidates.append("{}: '' -> {!r}".format(r.project_name, r.version))
         elif r.has_update():
             update_candidates.append("{}: {!r} -> {!r}".format(r.project_name, r.previous_version, r.version))
-    print(json.dumps(output_dict, indent=2, ensure_ascii=False))
-
-# TODO:test
+    return output_dict
