@@ -2,9 +2,7 @@
 import logging
 logger = logging.getLogger(__name__)
 import time
-import urllib.request
-from urllib.error import HTTPError
-import pprint
+from .compat import urlopen_json, HTTPError
 import argparse
 import json
 import sys
@@ -94,7 +92,7 @@ def parse(args):
 def get_info_from_package_name(request):
     url = "https://pypi.python.org/pypi/{name}/json".format(name=request.name)
     try:
-        info = json.loads(urllib.request.urlopen(url).readall().decode("utf-8"))
+        info = urlopen_json(url)
         return SuccessInfo(request, info)
     except HTTPError as e:
         return FailureInfo(request, str(e))
@@ -121,8 +119,8 @@ def main():
 
     r["update_candidates"] = update_candidates = []
     r["new_install_candidates"] = new_install_candidates = []
-    for p in r["packages"]:
-        version = p["version"]
+    for p in (p for p in r["packages"] if "version" in p):
+        version = str(p["version"])
         previous_version = p.get("_previous_version")
         if previous_version is None:
             new_install_candidates.append("{}: '' -> {!r}".format(p["name"], version))
@@ -130,4 +128,4 @@ def main():
         if version == previous_version:
             continue
         update_candidates.append("{}: {!r} -> {!r}".format(p["name"], previous_version, version))
-    pprint.pprint(r, indent=2)
+    print(json.dumps(r, indent=2, ensure_ascii=False))

@@ -3,8 +3,6 @@ ppic
 
 ppic is python package information collector.
 
-(warning: this package only support python3.x)
-
 how to use
 ----------------------------------------
 
