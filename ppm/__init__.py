@@ -120,11 +120,14 @@ def main():
         time.sleep(delay_time)  # delay for pypi server
 
     r["update_candidates"] = update_candidates = []
+    r["new_install_candidates"] = new_install_candidates = []
     for p in r["packages"]:
+        version = p["version"]
         previous_version = p.get("_previous_version")
         if previous_version is None:
+            new_install_candidates.append("{}: '' -> {!r}".format(p["name"], version))
             continue
-        if p["version"] == previous_version:
+        if version == previous_version:
             continue
-        update_candidates.append("{}: {} -> {}".format(p["name"], p["_previous_version"], p["version"]))
+        update_candidates.append("{}: {!r} -> {!r}".format(p["name"], previous_version, version))
     pprint.pprint(r, indent=2)
