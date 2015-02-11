@@ -63,7 +63,7 @@ class SuccessInfo(object):
     def _guess_last_modified(self, info, version):
         try:
             return info["releases"][version][0]["upload_time"]
-        except IndexError:
+        except (IndexError, KeyError):
             logger.info("releases not found: name=%s, version=%s", self.name, version)
             return ""
 
