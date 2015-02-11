@@ -29,9 +29,9 @@ tests_require = [
 testing_extras = tests_require + [
 ]
 
-setup(name='ppm',
+setup(name='ppic',
       version='0.1',
-      description='ppm is python package information collector.',
+      description='ppic is python package information collector.',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
           "Programming Language :: Python",
@@ -40,7 +40,7 @@ setup(name='ppm',
       keywords='',
       author="podhmo",
       author_email="",
-      url="https://github.com/podhmo/ppm",
+      url="https://github.com/podhmo/ppic",
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
@@ -50,9 +50,9 @@ setup(name='ppm',
           'docs': docs_extras,
       },
       tests_require=tests_require,
-      test_suite="ppm.tests",
+      test_suite="ppic.tests",
       entry_points="""
       [console_scripts]
-      ppm = ppm:main
+      ppic = ppic:main
 """)
 
