@@ -2,8 +2,8 @@
 import re
 import logging
 logger = logging.getLogger(__name__)
+import os.path
 import time
-from .compat import urlopen_json, HTTPError
 import argparse
 import json
 import sys
@@ -13,14 +13,18 @@ try:
 except ImportError:
     from pip.util import get_installed_distributions
 import pkg_resources
+import tempfile
+from .resource import PYPIJSONResource, CachedResourceWrapper
 
 
 Request = namedtuple("Request", "name previous_version distribution")
-Options = namedtuple("Options", "is_collect_all is_stable_only delay_time see_dependencies")
+Options = namedtuple("Options", "is_collect_all is_stable_only delay_time see_dependencies cache_path cache_timeout")
 
 default_options = Options(is_collect_all=True,
                           is_stable_only=False,
                           see_dependencies=False,
+                          cache_path=os.path.join(tempfile.gettempdir(), "ppic.json"),
+                          cache_timeout=60 * 10,
                           delay_time=0.05)
 
 
@@ -164,18 +168,19 @@ def parse(args):
     parser.add_argument('--installed', action="store_true")
     parser.add_argument('--dependency', action="store_true")
     parser.add_argument('--stable-only', action="store_true")
+    parser.add_argument('--no-cache', action="store_true")
+    parser.add_argument('--logging', choices=["debug", "info"], default=None)
     parser.add_argument("--delay", type=float, default=0.05)
     parser.add_argument('package', nargs="*")
     return parser.parse_args(args)
 
 
-def get_info_from_request(request, options=default_options):
-    url = "https://pypi.python.org/pypi/{name}/json".format(name=request.name)
-    try:
-        info = urlopen_json(url)
-        return SuccessInfo(request, info, options)
-    except HTTPError as e:
-        return FailureInfo(request, str(e), options)
+def get_info_from_request(resource, request, options=default_options):
+    info_or_error, status = resource.access(request)
+    if status:
+        return SuccessInfo(request, info_or_error, options)
+    else:
+        return FailureInfo(request, info_or_error, options)
 
 
 def collect_request_list(package_names, options):
@@ -199,13 +204,16 @@ def collect_request_list(package_names, options):
     return sorted(s, key=lambda r: r.name)
 
 
-def collect_info_list(request_list, options=default_options):
+def collect_info_list(request_list, options=default_options, usecache=False):
     fmt = "collecting information .. takes at least {} sec \n"
     sys.stderr.write(fmt.format(options.delay_time * (len(request_list) - 1)))
     results = []
-    for req in request_list:
-        results.append(get_info_from_request(req, options))
-        time.sleep(options.delay_time)  # delay for pypi server
+    resource = PYPIJSONResource(options.delay_time)
+    if usecache:
+        resource = CachedResourceWrapper(resource, options.cache_path, options.cache_timeout)
+    with resource.using():
+        for req in request_list:
+            results.append(get_info_from_request(resource, req, options))
     return results
 
 
@@ -229,14 +237,20 @@ def rendering_info_list(results):
 
 def main():
     parser = parse(sys.argv[1:])
+    if parser.logging:
+        logger.setLevel(getattr(logging, parser.logging.upper()))
+        logger.addHandler(logging.StreamHandler())
+
     options = Options(
         is_collect_all=parser.all or parser.installed,
         is_stable_only=parser.stable_only,
         see_dependencies=parser.dependency,
-        delay_time=parser.delay
+        delay_time=parser.delay,
+        cache_path=default_options.cache_path,
+        cache_timeout=default_options.cache_timeout
     )
     request_list = collect_request_list(parser.package, options=options)
-    results = collect_info_list(request_list, options=options)
+    results = collect_info_list(request_list, options=options, usecache=not parser.no_cache)
 
     output_dict = rendering_info_list(results)
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))
