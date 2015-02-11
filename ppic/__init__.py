@@ -152,22 +152,27 @@ def get_info_from_request(request):
 DELAY_TIME = 0.05
 
 
+def collect_request_list(package_names, is_collect_all=False):
+    s = set()
+    repository = RequestRepository()
+    if is_collect_all:
+        s.update(repository.collect_installed())
+    for name in package_names:
+        s.add(repository.find(name))
+    return list(s)
+
+
 def main():
     parser = parse(sys.argv[1:])
-    repository = RequestRepository()
-    if parser.all:
-        request_list = repository.collect_installed()
-    else:
-        request_list = [repository.find(p) for p in parser.package]
-
+    request_list = collect_request_list(parser.package, parser.all)
     delay_time = parser.delay or DELAY_TIME
-    results = collect_results_from_request_list(request_list, delay_time=delay_time)
+    results = collect_info_list(request_list, delay_time=delay_time)
 
     output_dict = rendering_info_list(results)
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))
 
 
-def collect_results_from_request_list(request_list, delay_time=DELAY_TIME):
+def collect_info_list(request_list, delay_time=DELAY_TIME):
     fmt = "collection information .. takes at least {} sec \n"
     sys.stderr.write(fmt.format(delay_time * (len(request_list) - 1)))
     results = []
