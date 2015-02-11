@@ -13,6 +13,8 @@ class Tests(unittest.TestCase):
             is_stable_only=False,
             see_dependencies=False,
             delay_time=0,
+            cache_path=None,
+            cache_timeout=0
         )
         return self._getTarget()(package_name, options)
 
