@@ -159,7 +159,7 @@ def collect_request_list(package_names, is_collect_all=False):
         s.update(repository.collect_installed())
     for name in package_names:
         s.add(repository.find(name))
-    return list(s)
+    return sorted(s, key=lambda r: r.name)
 
 
 def main():
