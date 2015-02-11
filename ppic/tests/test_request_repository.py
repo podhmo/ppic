@@ -33,3 +33,12 @@ class FindTests(unittest.TestCase):
         result = target.find("python-pip")
         self.assertEqual(result.name, "python-pip")  # name is project name
         self.assertEqual(result.previous_version, mockin_pip.version)  # important
+
+
+@test_target("ppic:RequestRepository")
+class CollectInstalledPackagesTests(unittest.TestCase):
+    def test_it(self):
+        target = self._makeOne()
+        result = target.collect_installed()
+        self.assertTrue(len(result) >= 1)
+        self.assertIsNotNone(result[0].previous_version)
