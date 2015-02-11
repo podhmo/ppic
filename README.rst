@@ -14,10 +14,8 @@ if your environment is such as below. ::
   SQLAlchemy==0.9.7
 
 ``ppm`` command can collect information that need available updates are existed or not. ::
-
   $ ppm sqlalchemy ansible
-  collection information .. takes at least 0.1 sec
-
+  collection information .. takes at least 0.05 sec
   { 'packages': [ { 'name': 'SQLAlchemy',
                     '_previous_version': '0.9.7',
                     'version': '0.9.8',
@@ -31,6 +29,7 @@ if your environment is such as below. ::
 ``--all`` option with ``ppm`` then collect all information in your in environment. ::
 
   $ ppm --all
+  collection information .. takes at least 0.00 sec
   { 'packages': [ { 'name': 'SQLAlchemy',
                     '_previous_version': '0.9.7',
                     'version': '0.9.8',
