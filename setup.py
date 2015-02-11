@@ -31,7 +31,7 @@ testing_extras = tests_require + [
 
 setup(name='ppm',
       version='0.1',
-      description='-',
+      description='ppm is python package information collector.',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
           "Programming Language :: Python",
