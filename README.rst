@@ -25,13 +25,13 @@ if your environment is such as below. ::
     'update_candidates': ["SQLAlchemy: '0.9.7' -> '0.9.8'"], # update is found.
     'new_install_candidates': ["ansible: '' -> '1.8.2'"]}  # ansible is not found in your environment
 
-``--all`` option
+``--installed`` option
 ----------------------------------------
 
-``--all`` option with ``ppic`` then collect all information in your in environment. ::
+``--installed`` option with ``ppic`` then collect all information in your in environment. ::
 
 
-  $ ppic --all
+  $ ppic --installed
   collection information .. takes at least 0.00 sec
   { 'packages': [ { 'name': 'SQLAlchemy',
                     '_previous_version': '0.9.7',

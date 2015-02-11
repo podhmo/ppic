@@ -16,10 +16,11 @@ import pkg_resources
 
 
 Request = namedtuple("Request", "name previous_version")
-Options = namedtuple("Options", "is_collect_all is_stable_only delay_time")
+Options = namedtuple("Options", "is_collect_all is_stable_only delay_time see_dependencies")
 
 default_options = Options(is_collect_all=True,
                           is_stable_only=False,
+                          see_dependencies=False,
                           delay_time=0.05)
 
 
@@ -159,7 +160,9 @@ class RequestRepository(object):
 
 def parse(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--all', action="store_true")
+    parser.add_argument('--all', action="store_true")  # deprecated
+    parser.add_argument('--installed', action="store_true")
+    parser.add_argument('--dependency', action="store_true")
     parser.add_argument('--stable-only', action="store_true")
     parser.add_argument("--delay", type=float, default=0.05)
     parser.add_argument('package', nargs="*")
@@ -216,8 +219,9 @@ def rendering_info_list(results):
 def main():
     parser = parse(sys.argv[1:])
     options = Options(
-        is_collect_all=parser.all,
+        is_collect_all=parser.all or parser.installed,
         is_stable_only=parser.stable_only,
+        see_dependencies=parser.dependency,
         delay_time=parser.delay
     )
     request_list = collect_request_list(parser.package, options=options)

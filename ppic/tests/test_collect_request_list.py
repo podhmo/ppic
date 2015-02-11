@@ -11,6 +11,7 @@ class Tests(unittest.TestCase):
         options = Options(
             is_collect_all=is_collect_all,
             is_stable_only=False,
+            see_dependencies=False,
             delay_time=0,
         )
         return self._getTarget()(package_name, options)
