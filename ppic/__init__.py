@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import re
 import logging
 logger = logging.getLogger(__name__)
 import time
@@ -31,7 +32,24 @@ class SuccessInfo(object):
 
     @property
     def version(self):
-        return self.info["info"]["version"]
+        if not self.options.is_stable_only:
+            return self.info["info"]["version"]
+
+        version = self.info["info"]["stable_version"]
+        if version is None:
+            return self._guess_stable_version(sorted(self.info["releases"].keys(), reverse=True))
+        return version
+
+    unstable_rx = re.compile("[\._][0-9]*([_\-a-zA-Z]+[0-9]*)+$")
+
+    def _guess_stable_version(self, version_candidates):
+        # this is heuristic.
+        # 1.8a, 1.8a1, 1.8x is unstable
+        for v in version_candidates:
+            if not self.unstable_rx.search(v):
+                return v
+        logger.info("allrelease is unstable: name=%s", self.name)
+        return "xxx"
 
     @property
     def previous_version(self):
@@ -142,7 +160,7 @@ class RequestRepository(object):
 def parse(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--all', action="store_true")
-    parser.add_argument('--stable-only', action="store_false")
+    parser.add_argument('--stable-only', action="store_true")
     parser.add_argument("--delay", type=float, default=0.05)
     parser.add_argument('package', nargs="*")
     return parser.parse_args(args)
