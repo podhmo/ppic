@@ -184,3 +184,18 @@ if your environment is such as below. ::
       }
     ]
   }
+
+appendix: using with ``jq``
+----------------------------------------
+
+::
+
+  $ ppic pyramid --dependency| jq .update_candidates
+  collecting information .. takes at least 0.4 sec 
+  [
+    "pyramid: '1.5.1' -> '1.5.2'",
+    "setuptools: '3.6' -> '12.1'",
+    "translationstring: '1.1' -> '1.3'",
+    "zope.deprecation: '4.1.1' -> '4.1.2'",
+    "zope.interface: '4.1.1' -> '4.1.2'"
+  ]
