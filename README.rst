@@ -79,3 +79,108 @@ if your environment is such as below. ::
     ]
   }
 
+``--dependency`` option
+----------------------------------------
+
+``--dependency`` option with ``ppic`` then, collecting information in consideration of package dependency, so including dependents packages.
+
+::
+
+  {
+    "packages": [
+      {
+        "name": "PasteDeploy", 
+        "_previous_version": "1.5.2", 
+        "version": "1.5.2", 
+        "last_modified": "2013-12-27T17:41:02"
+      }, 
+      {
+        "name": "WebOb", 
+        "_previous_version": "1.4", 
+        "version": "1.4", 
+        "last_modified": "2014-05-15T01:30:57"
+      }, 
+      {
+        "name": "pyramid", 
+        "_previous_version": "1.5.1", 
+        "version": "1.5.2", 
+        "last_modified": "2014-11-10T05:06:15"
+      }, 
+      {
+        "name": "repoze.lru", 
+        "_previous_version": "0.6", 
+        "version": "0.6", 
+        "last_modified": "2012-07-12T20:48:40"
+      }, 
+      {
+        "name": "setuptools", 
+        "_previous_version": "3.6", 
+        "version": "12.1", 
+        "last_modified": "2015-02-11T01:16:43"
+      }, 
+      {
+        "name": "translationstring", 
+        "_previous_version": "1.1", 
+        "version": "1.3", 
+        "last_modified": "2014-11-05T20:19:35"
+      }, 
+      {
+        "name": "venusian", 
+        "_previous_version": "1.0", 
+        "version": "1.0", 
+        "last_modified": "2014-06-30T17:27:36"
+      }, 
+      {
+        "name": "zope.deprecation", 
+        "_previous_version": "4.1.1", 
+        "version": "4.1.2", 
+        "last_modified": "2015-01-13T15:28:52"
+      }, 
+      {
+        "name": "zope.interface", 
+        "_previous_version": "4.1.1", 
+        "version": "4.1.2", 
+        "last_modified": "2014-12-28T01:05:28"
+      }
+    ], 
+    "update_candidates": [
+      "pyramid: '1.5.1' -> '1.5.2'", 
+      "setuptools: '3.6' -> '12.1'", 
+      "translationstring: '1.1' -> '1.3'", 
+      "zope.deprecation: '4.1.1' -> '4.1.2'", 
+      "zope.interface: '4.1.1' -> '4.1.2'"
+    ], 
+    "new_install_candidates": [], 
+    "dependencies": [
+      {
+        "pyramid": [
+          "setuptools", 
+          "WebOb", 
+          "repoze.lru", 
+          {
+            "zope.interface": [
+              "setuptools"
+            ]
+          }, 
+          {
+            "zope.deprecation": [
+              "setuptools"
+            ]
+          }, 
+          "venusian", 
+          "translationstring", 
+          "PasteDeploy"
+        ]
+      }, 
+      {
+        "zope.deprecation": [
+          "setuptools"
+        ]
+      }, 
+      {
+        "zope.interface": [
+          "setuptools"
+        ]
+      }
+    ]
+  }

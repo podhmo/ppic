@@ -244,20 +244,28 @@ def rendering_info_list(results):
     return output_dict
 
 
-def collect_dependencies(request):
+def collect_dependencies(request, history, working_set=pkg_resources.working_set):
     if request.distribution is None:
         return {request.name: "UNKNOWN"}
 
-    def rec(dist):
-        if not hasattr(dist, "requires"):
-            return dist.project_name
+    def rec(dist, initial):
+        if dist is None:
+            return None
+        if dist._key in history:
+            children = history[dist._key]
+            if initial and len(children) <= 0:
+                return None
+            return {dist.project_name: children} if len(children) > 0 else dist.project_name
 
-        children = [rec(d) for d in dist.requires()]
-        if len(children) <= 0:
-            return dist.project_name
-        else:
-            return {dist.project_name: children}
-    return rec(request.distribution)
+        children = history[dist._key] = []
+        for r in dist.requires():
+            child = rec(working_set.by_key.get(r.key), initial=False)
+            if child is not None:
+                children.append(child)
+        if initial and len(children) <= 0:
+            return None
+        return {dist.project_name: children} if len(children) > 0 else dist.project_name
+    return rec(request.distribution, initial=True)
 
 
 def main():
@@ -279,6 +287,7 @@ def main():
 
     output_dict = rendering_info_list(results)
     if options.see_dependencies:
-        maybe_dependencies = [collect_dependencies(req) for req in request_list]
+        history = {}
+        maybe_dependencies = [collect_dependencies(req, history=history) for req in request_list]
         output_dict["dependencies"] = [e for e in maybe_dependencies if e is not None]
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))
