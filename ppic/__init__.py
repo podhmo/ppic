@@ -172,13 +172,13 @@ class RequestRepository(object):
 
 def parse(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--all', action="store_true")  # deprecated
-    parser.add_argument('--installed', action="store_true")
-    parser.add_argument('--dependency', action="store_true")
-    parser.add_argument('--stable-only', action="store_true")
-    parser.add_argument('--no-cache', action="store_true")
-    parser.add_argument('--logging', choices=["debug", "info"], default=None)
-    parser.add_argument("--delay", type=float, default=0.05)
+    parser.add_argument('--all', action="store_true", help="(deprecated) same as --installed")  # deprecated
+    parser.add_argument('--installed', action="store_true", help="collecting installed packages information in your env")
+    parser.add_argument('--dependency', action="store_true", help="collecting dependents package's information")
+    parser.add_argument('--stable-only', action="store_true", help="newest stable version(guessing)")
+    parser.add_argument('--no-cache', action="store_true", help="doesn't using temporary cache(timeout default is 10min)")
+    parser.add_argument('--logging', choices=["debug", "info"], default=None, help="activation for logging message")
+    parser.add_argument("--delay", type=float, default=0.05, help="delay time of each request")
     parser.add_argument('package', nargs="*")
     return parser.parse_args(args)
 
