@@ -177,6 +177,7 @@ def parse(args):
     parser.add_argument('--dependency', action="store_true", help="collecting dependents package's information")
     parser.add_argument('--stable-only', action="store_true", help="newest stable version(guessing)")
     parser.add_argument('--no-cache', action="store_true", help="doesn't using temporary cache(timeout default is 10min)")
+    parser.add_argument('--cache-timeout', default=default_options.cache_timeout, type=int, help="temporary cache timeout(seconds)")
     parser.add_argument('--logging', choices=["debug", "info"], default=None, help="activation for logging message")
     parser.add_argument("--delay", type=float, default=0.05, help="delay time of each request")
     parser.add_argument('package', nargs="*")
@@ -255,7 +256,7 @@ def main():
         see_dependencies=parser.dependency,
         delay_time=parser.delay,
         cache_path=default_options.cache_path,
-        cache_timeout=default_options.cache_timeout
+        cache_timeout=parser.cache_timeout
     )
     request_list = collect_request_list(parser.package, options=options)
     results = collect_info_list(request_list, options=options, usecache=not parser.no_cache)
