@@ -244,6 +244,22 @@ def rendering_info_list(results):
     return output_dict
 
 
+def collect_dependencies(request):
+    if request.distribution is None:
+        return {request.name: "UNKNOWN"}
+
+    def rec(dist):
+        if not hasattr(dist, "requires"):
+            return dist.project_name
+
+        children = [rec(d) for d in dist.requires()]
+        if len(children) <= 0:
+            return dist.project_name
+        else:
+            return {dist.project_name: children}
+    return rec(request.distribution)
+
+
 def main():
     parser = parse(sys.argv[1:])
     if parser.logging:
@@ -262,4 +278,7 @@ def main():
     results = collect_info_list(request_list, options=options, usecache=not parser.no_cache)
 
     output_dict = rendering_info_list(results)
+    if options.see_dependencies:
+        maybe_dependencies = [collect_dependencies(req) for req in request_list]
+        output_dict["dependencies"] = [e for e in maybe_dependencies if e is not None]
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))
