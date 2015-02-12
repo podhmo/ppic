@@ -45,7 +45,8 @@ class CachedResourceWrapper(object):
             logger.info("load: cachepath=%s", cachepath)
             with open(cachepath, "r") as r:
                 self._cache = json.load(r)
-        except Exception:
+        except Exception as e:
+            logger.exception("%s", e)
             self._cache = {}
 
     def save(self, cachepath):
