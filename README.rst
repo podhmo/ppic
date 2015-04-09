@@ -28,7 +28,7 @@ if your environment is such as below. ::
 ``--installed`` option
 ----------------------------------------
 
-``--installed`` option with ``ppic`` then collect all information in your in environment. ::
+``--installed`` (or ``-i``) option with ``ppic`` then collect all information in your in environment. ::
 
 
   $ ppic --installed
@@ -44,7 +44,7 @@ if your environment is such as below. ::
 ``--stable-only`` option
 ----------------------------------------
 
-``--stable-only`` option with ``ppic`` then collecting stable version only(but this is heuristic aproach maybe wrong, maybe)
+``--stable-only`` (or ``-s``) option with ``ppic`` then collecting stable version only(but this is heuristic aproach maybe wrong, maybe)
 
 ::
 
@@ -82,7 +82,7 @@ if your environment is such as below. ::
 ``--dependency`` option
 ----------------------------------------
 
-``--dependency`` option with ``ppic`` then, collecting information in consideration of package dependency, so including dependents packages.
+``--dependency`` (or ``-d``) option with ``ppic`` then, collecting information in consideration of package dependency, so including dependents packages.
 
 ::
 
