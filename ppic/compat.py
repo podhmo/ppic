@@ -5,8 +5,7 @@ import json
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
 
-
-if PY3: # pragma: no cover
+if PY3:  # pragma: no cover
     from urllib.error import HTTPError
 else:
     HTTPError = Exception
@@ -15,7 +14,7 @@ if PY3:
     from urllib.request import urlopen
 
     def urlopen_json(url):
-        return json.loads(urlopen(url).readall().decode("utf-8"))
+        return json.load(urlopen(url))
 else:
     from urllib import urlopen
 
