@@ -2,11 +2,13 @@
 import unittest
 from evilunit import test_function
 from unittest import mock
+from ppic import get_working_set
 
 
 @test_function("ppic:collect_request_list")
 class Tests(unittest.TestCase):
     def _callFUT(self, package_name, is_collect_all):
+        from ppic import get_working_set
         from ppic import Options
         options = Options(
             is_collect_all=is_collect_all,
@@ -16,7 +18,7 @@ class Tests(unittest.TestCase):
             cache_path=None,
             cache_timeout=0
         )
-        return self._getTarget()(package_name, options)
+        return self._getTarget()(package_name, get_working_set(), options)
 
     def test_one__collect_all__is__False__one_found(self):
         class wana_install:
@@ -67,7 +69,6 @@ class Tests(unittest.TestCase):
             self.assertEqual(result, [wana_install.foo])
 
     def test_one__dupplicated_with_enrionment(self):
-
         class wana_install:
             class foo:
                 name = "foo"

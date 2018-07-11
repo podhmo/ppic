@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import re
 import logging
-logger = logging.getLogger(__name__)
 import os.path
 import argparse
 import json
@@ -10,22 +9,36 @@ from collections import OrderedDict, namedtuple
 try:
     from pip.utils import get_installed_distributions
 except ImportError:
-    from pip.util import get_installed_distributions
-import pkg_resources
+    import pkg_resources
+
+    def get_installed_distributions():
+        return pkg_resources.working_set
+
+
 import tempfile
 from distlib.version import NormalizedVersion, UnsupportedVersionError
 from .resource import PYPIJSONResource, CachedResourceWrapper
 
-
+logger = logging.getLogger(__name__)
 Request = namedtuple("Request", "name previous_version distribution")
-Options = namedtuple("Options", "is_collect_all is_stable_only delay_time see_dependencies cache_path cache_timeout")
+Options = namedtuple(
+    "Options", "is_collect_all is_stable_only delay_time see_dependencies cache_path cache_timeout"
+)
 
-default_options = Options(is_collect_all=True,
-                          is_stable_only=False,
-                          see_dependencies=False,
-                          cache_path=os.path.join(tempfile.gettempdir(), "ppic.json"),
-                          cache_timeout=60 * 10,
-                          delay_time=0.05)
+default_options = Options(
+    is_collect_all=True,
+    is_stable_only=False,
+    see_dependencies=False,
+    cache_path=os.path.join(tempfile.gettempdir(), "ppic.json"),
+    cache_timeout=60 * 10,
+    delay_time=0.05
+)
+
+
+def get_working_set():
+    # todo: drop it
+    import pkg_resources
+    return pkg_resources.working_set
 
 
 class SuccessInfo(object):
@@ -82,8 +95,7 @@ class SuccessInfo(object):
         return self.previous_version is None
 
     def has_update(self):
-        return (not self.is_new_install()
-                and self.previous_version != self.version)
+        return (not self.is_new_install() and self.previous_version != self.version)
 
     @property
     def project_name(self):
@@ -139,7 +151,7 @@ class RequestBuilder(object):
 
 class RequestRepository(object):
     def __init__(self, working_set=None):
-        self.working_set = working_set or pkg_resources.working_set
+        self.working_set = working_set or get_working_set()
         self._by_project_name = None
         self.builder = RequestBuilder()
 
@@ -172,13 +184,38 @@ class RequestRepository(object):
 
 def parse(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--all', action="store_true", help="(deprecated) same as --installed")  # deprecated
-    parser.add_argument('-i', '--installed', action="store_true", help="collecting installed packages information in your env")
-    parser.add_argument('-d', '--dependency', action="store_true", help="collecting dependents package's information")
-    parser.add_argument('-s', '--stable-only', action="store_true", help="newest stable version(guessing)")
-    parser.add_argument('--no-cache', action="store_true", help="doesn't using temporary cache(timeout default is 10min)")
-    parser.add_argument('--cache-timeout', default=default_options.cache_timeout, type=int, help="temporary cache timeout(seconds)")
-    parser.add_argument('--logging', choices=["debug", "info"], default=None, help="activation for logging message")
+    parser.add_argument(
+        '--all', action="store_true", help="(deprecated) same as --installed"
+    )  # deprecated
+    parser.add_argument(
+        '-i',
+        '--installed',
+        action="store_true",
+        help="collecting installed packages information in your env"
+    )
+    parser.add_argument(
+        '-d',
+        '--dependency',
+        action="store_true",
+        help="collecting dependents package's information"
+    )
+    parser.add_argument(
+        '-s', '--stable-only', action="store_true", help="newest stable version(guessing)"
+    )
+    parser.add_argument(
+        '--no-cache',
+        action="store_true",
+        help="doesn't using temporary cache(timeout default is 10min)"
+    )
+    parser.add_argument(
+        '--cache-timeout',
+        default=default_options.cache_timeout,
+        type=int,
+        help="temporary cache timeout(seconds)"
+    )
+    parser.add_argument(
+        '--logging', choices=["debug", "info"], default=None, help="activation for logging message"
+    )
     parser.add_argument("--delay", type=float, default=0.05, help="delay time of each request")
     parser.add_argument('package', nargs="*")
     return parser.parse_args(args)
@@ -192,7 +229,7 @@ def get_info_from_request(resource, request, options=default_options):
         return FailureInfo(request, info_or_error, options)
 
 
-def collect_request_list(package_names, options):
+def collect_request_list(package_names, working_set, options):
     def recursive_collect(request):
         if request.distribution:
             for d in request.distribution.requires():
@@ -201,7 +238,7 @@ def collect_request_list(package_names, options):
                 recursive_collect(request)
 
     s = set()
-    repository = RequestRepository()
+    repository = RequestRepository(working_set=working_set)
     if options.is_collect_all:
         s.update(repository.collect_installed())
     for name in package_names:
@@ -240,11 +277,13 @@ def rendering_info_list(results):
         if r.is_new_install():
             new_install_candidates.append("{}: '' -> {!r}".format(r.project_name, r.version))
         elif r.has_update():
-            update_candidates.append("{}: {!r} -> {!r}".format(r.project_name, r.previous_version, r.version))
+            update_candidates.append(
+                "{}: {!r} -> {!r}".format(r.project_name, r.previous_version, r.version)
+            )
     return output_dict
 
 
-def collect_dependencies(request, history, working_set=pkg_resources.working_set):
+def collect_dependencies(request, history, working_set):
     if request.distribution is None:
         return {request.name: "UNKNOWN"}
 
@@ -265,10 +304,11 @@ def collect_dependencies(request, history, working_set=pkg_resources.working_set
         if initial and len(children) <= 0:
             return None
         return {dist.project_name: children} if len(children) > 0 else dist.project_name
+
     return rec(request.distribution, initial=True)
 
 
-def main():
+def main(working_set=None):
     parser = parse(sys.argv[1:])
     if parser.logging:
         logger.setLevel(getattr(logging, parser.logging.upper()))
@@ -282,12 +322,17 @@ def main():
         cache_path=default_options.cache_path,
         cache_timeout=parser.cache_timeout
     )
-    request_list = collect_request_list(parser.package, options=options)
+    if working_set is None:
+        working_set = get_working_set()
+    request_list = collect_request_list(parser.package, working_set, options=options)
     results = collect_info_list(request_list, options=options, usecache=not parser.no_cache)
 
     output_dict = rendering_info_list(results)
     if options.see_dependencies:
         history = {}
-        maybe_dependencies = [collect_dependencies(req, history=history) for req in request_list]
+        maybe_dependencies = [
+            collect_dependencies(req, history=history, working_set=working_set)
+            for req in request_list
+        ]
         output_dict["dependencies"] = [e for e in maybe_dependencies if e is not None]
     print(json.dumps(output_dict, indent=2, ensure_ascii=False))

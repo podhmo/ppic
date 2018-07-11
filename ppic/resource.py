@@ -2,8 +2,9 @@
 import time
 import json
 import contextlib
-from . import logger
 from .compat import urlopen_json, HTTPError
+from logging import getLogger as get_logger
+logger = get_logger(__name__)
 
 
 class PYPIJSONResource(object):
