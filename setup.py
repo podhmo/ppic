@@ -23,7 +23,7 @@ testing_extras = tests_require + []
 
 setup(
     name='ppic',
-    version='0.2.6',
+    version='0.2.7',
     description='ppic is python package information collector.',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
